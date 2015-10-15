@@ -11,6 +11,8 @@
 
 #include <XBee.h>
 #include <Wire.h>
+#include <HMC5883L.h>
+#define address 0x1E 
 
 XBee xbee = XBee();
 int compassAddress = 0x42 >> 1;
@@ -21,6 +23,10 @@ void setup(){
   Serial.begin(57600);
   Serial1.begin(57600);
   xbee.setSerial(Serial1);
+   Wire.beginTransmission(address); //open communication with HMC5883
+  Wire.write(0x02); //select mode register
+  Wire.write(0x00); //continuous measurement mode
+  Wire.endTransmission();
 }
 
 void loop(){
@@ -39,22 +45,22 @@ void loop(){
 /*--------------------------------------------------------------
 This the the fucntion which gathers the heading from the compass.
 ----------------------------------------------------------------*/
-float getVector () {
-  float reading = -1;
+int getVector () {
+  int reading = -1;
   int x, y, z; 
   
   // step 1: instruct sensor to read echoes 
-  Wire.beginTransmission(compassAddress);  // transmit to device
+  Wire.beginTransmission(address);  // transmit to device
   // the address specified in the datasheet is 66 (0x42) 
   // but i2c adressing uses the high 7 bits so it's 33 
-  Wire.write('A');          // command sensor to measure angle  
+  Wire.write(0x03);          // command sensor to measure angle  
   Wire.endTransmission();  // stop transmitting 
 
   // step 2: wait for readings to happen 
   delay(7);               // datasheet suggests at least 6000 microseconds 
 
   // step 3: request reading from sensor 
-  Wire.requestFrom(compassAddress, 6);  // request 2 bytes from slave device #33 
+  Wire.requestFrom(address, 6);  // request 2 bytes from slave device #33 
 
   // step 4: receive reading from sensor 
   if(2 <= Wire.available())     // if two bytes were received 

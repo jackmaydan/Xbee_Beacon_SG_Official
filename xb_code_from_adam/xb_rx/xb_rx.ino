@@ -33,6 +33,7 @@ void setup() {
   Serial.begin(57600); 
   Serial1.begin(57600);
   xbee.setSerial(Serial1);
+  Serial.println("setup");
   Reset();
 }
 
@@ -41,7 +42,7 @@ void setup() {
 
 void loop() {
   
-  for(int i = 0;i<Samples;i++) Retrieve();      //Retrieves packets and their RSSI values and stores them.
+  for(int i = 0;i<Samples;i++)  Serial.println("try to retreive"); Retrieve();   Serial.println("retreive did something");
   
   //Passes all received data through a digital filter.
   for(int i = 0;i<arraySize;i++){
@@ -52,6 +53,7 @@ void loop() {
 
   //Process the data once more, print the result, and reset.
   int finalHeading = (ProcessData());
+  Serial.println("final heading");
   Serial.println(finalHeading);
   Reset();
 }
