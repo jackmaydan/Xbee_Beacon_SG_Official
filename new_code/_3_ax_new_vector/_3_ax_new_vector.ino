@@ -1,7 +1,7 @@
 #include <HMC5883L.h>
 
     #include <Wire.h> //I2C Arduino Library
-#define address 0x1E //0011110b, I2C 7bit address of HMC5883
+#define address 0x1E //0011110b, I2C 7bit address of HMC5883 
 
 void setup(){
   //Initialize Serial and I2C communications

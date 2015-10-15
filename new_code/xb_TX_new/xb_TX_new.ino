@@ -63,7 +63,7 @@ float getVector () {
     x |= Wire.read(); //X lsb
     z = Wire.read()<<8; //Z msb
     z |= Wire.read(); //Z lsb
-    y = Wire.read()<<8; //Y msb
+    y = Wire.read()<<8; //Y msb/
     y |= Wire.read(); //Y lsb
    
   } 
@@ -73,6 +73,7 @@ float getVector () {
 reading = heading * 180/M_PI;
     Serial.print("Theta: ");
    Serial.println(reading); // print the heading/bearing
+   delay(500);
    return(reading);    // return the heading or bearing
 }
 
