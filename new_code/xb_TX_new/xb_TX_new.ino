@@ -72,7 +72,7 @@ float getVector () {
       heading += 2*PI;
 reading = heading * 180/M_PI;
     Serial.print("Theta: ");
-   Serial.println(reading);
-   return(reading);    // print the reading 
+   Serial.println(reading); // print the heading/bearing
+   return(reading);    // return the heading or bearing
 }
 
