@@ -79,7 +79,7 @@ int getVector () {
 reading = heading * 180/M_PI;
     Serial.print("Theta: ");
    Serial.println(reading); // print the heading/bearing
-   delay(500);
+   delay(50);
    return(reading);    // return the heading or bearing
 }
 
