@@ -1,4 +1,4 @@
-//XBEE 2.4GHZ System For Delivering Location Relative Bearing in Degrees.
+//XBEE 2.4GHZ Transmitter System For Delivering Location Relative Bearing in Degrees.
 //Finalized by Jack Maydan based off Adam St. Amard's earlier versions.
 //
 //This program works based on the Spark Fun Arduino FIO v3.3 with an XBEE transmitter hooked to an extended antennae.

@@ -203,3 +203,4 @@ int ProcessData(){
   
   return maxIndex/counter;    //Return the average of all headings >=maxRSSI - 1
 }
+
