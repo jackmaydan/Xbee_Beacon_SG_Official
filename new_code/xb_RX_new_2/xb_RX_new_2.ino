@@ -26,6 +26,7 @@ int sensSmoothArray [filterSamples];   // holds past RSSI values for filteringin
 int resetRSSI = 20;    //The value that RSSI is reset to after each pass through filter
 int Samples = 110;
 int temp;
+int rawData, smoothData;  // variables for sensor dataM
 
 void setup() {
   //Initialize serial communications at 9600 bps:
@@ -40,7 +41,7 @@ void setup() {
 
 void loop() {
   Retrieve();
-  /*
+  
   for(int i = 0;i<Samples;i++) Retrieve();      //Retrieves packets and their RSSI values and stores them.
   
   //Passes all received data through a digital filter.
@@ -49,12 +50,12 @@ void loop() {
     smoothData = digitalSmooth(RSSIArray[i], sensSmoothArray);
     RSSIArray[i] = smoothData;
   }
-  */
+  
   //Process the data once more, print the result, and reset.
-  //int finalHeading = (ProcessData());
+  int finalHeading = (ProcessData());
   Serial.println(temp);
-  //Serial.println(finalHeading);
-  //Reset();
+  Serial.println(finalHeading);
+  Reset();
 }
 
 
@@ -124,14 +125,14 @@ int digitalSmooth(int rawIn, int *sensSmoothArray){     // "int *sensSmoothArray
   int j, k, temp, top, bottom;
   long total;
   static int i;
- // static int raw[filterSamples];
+  static int raw[filterSamples];
   static int sorted[filterSamples];
   boolean done;
 
   i = (i + 1) % filterSamples;    // increment counter and roll over if necc. -  % (modulo operator) rolls over variable
   sensSmoothArray[i] = rawIn;                 // input new data into the oldest slot
 
-  // Serial.print("raw = ");
+   //Serial.print("raw = ");
 
   for (j=0; j<filterSamples; j++){     // transfer data array into anther array for sorting and averaging
     sorted[j] = sensSmoothArray[j];
@@ -150,13 +151,13 @@ int digitalSmooth(int rawIn, int *sensSmoothArray){     // "int *sensSmoothArray
     }
   }
 
-/*
-  for (j = 0; j < (filterSamples); j++){    // print the array to debug
-    Serial.print(sorted[j]); 
-    Serial.print("   "); 
-  }
-  Serial.println();
-*/
+//
+//  for (j = 0; j < (filterSamples); j++){    // print the array to debug
+//    Serial.print(sorted[j]); 
+//    Serial.print("   "); 
+//  }
+//  Serial.println();
+
 
   // throw out top and bottom 15% of samples - limit to throw out at least one from top and bottom
   bottom = max(((filterSamples * 15)  / 100), 1); 
