@@ -1,5 +1,7 @@
 //XBEE 2.4GHZ Transmitter System For Delivering Location Relative Bearing in Degrees.
 //Finalized by Jack Maydan based off Adam St. Amard's earlier versions.
+//Edited by Robert Belter 10/30/2015
+
 //
 //This program works based on the Spark Fun Arduino FIO v3.3 with an XBEE transmitter hooked to an extended antennae.
 //The board also is hooked to a 3 axis magnetometer. 
@@ -11,28 +13,48 @@
 
 #include <XBee.h>
 #include <Wire.h>
-#include <HMC5883L.h>
+//#include <HMC5883L.h>
 #define address 0x1E 
+
+//#define calibration_mode
 
 XBee xbee = XBee();
 int compassAddress = 0x42 >> 1;
-int currentVector = 0;
+
+uint8_t payload[4] = {0,0,0,0};
+
+
+union{
+  float f;
+  uint8_t b[4];
+}heading_converter;
+
+//Callibration values, can be ignored
+#ifdef calibration_mode
+int xmax, ymax, zmax = -1000;
+int xmin, ymin, zmin = 1000;
+#endif
+
+//Axis offsets
+int xoff = -127;
+int yoff = 225;
+int zoff = -168;
 
 void setup(){
   Wire.begin();
   Serial.begin(57600);
   Serial1.begin(57600);
   xbee.setSerial(Serial1);
-   Wire.beginTransmission(address); //open communication with HMC5883
+  Wire.beginTransmission(address); //open communication with HMC5883
   Wire.write(0x02); //select mode register
   Wire.write(0x00); //continuous measurement mode
   Wire.endTransmission();
 }
 
 void loop(){
-  currentVector = getVector();
-  uint8_t payload[] = {currentVector/2};
-
+  heading_converter.f = getVector();
+  //Copy heading into payload
+  memcpy(payload, heading_converter.b, 4);
   //Address of receiving device can be anything while in broadcasting mode
   Tx16Request tx = Tx16Request(0x5678, payload, sizeof(payload));
   xbee.send(tx);
@@ -46,7 +68,7 @@ void loop(){
 This the the fucntion which gathers the heading from the compass.
 ----------------------------------------------------------------*/
 int getVector () {
-  int reading = -1;
+  float reading = -1;
   int x, y, z; 
   
   // step 1: instruct sensor to read echoes 
@@ -65,7 +87,7 @@ int getVector () {
   // step 4: receive reading from sensor 
   if(2 <= Wire.available())     // if two bytes were received 
   { 
-   x = Wire.read()<<8; //X msb
+    x = Wire.read()<<8; //X msb
     x |= Wire.read(); //X lsb
     z = Wire.read()<<8; //Z msb
     z |= Wire.read(); //Z lsb
@@ -73,13 +95,28 @@ int getVector () {
     y |= Wire.read(); //Y lsb
    
   } 
- float heading = atan2(y,x);
-   if(heading < 0)
-      heading += 2*PI;
-reading = heading * 180/M_PI;
-    Serial.print("Theta: ");
-   Serial.println(reading); // print the heading/bearing
-   delay(50);
-   return(reading);    // return the heading or bearing
+  //Adjust values by offsets
+  x += xoff;
+  y += yoff;
+  z += zoff;
+#ifdef calibration_mode
+  if(x<xmin) xmin = x;
+  if(x>xmax) xmax = x;
+  if(y<ymin) ymin = y;
+  if(y>ymax) ymax = y;
+  if(z<zmin) zmin = z;
+  if(z>zmax) zmax = z;
+  char output[100];
+  sprintf(output, "x: %d - %d, y: %d - %d, z: %d - %d", xmin, xmax, ymin, ymax, zmin, zmax);
+  Serial.println(output);
+#endif
+  float heading = atan2(y,x);
+  if(heading < 0)
+    heading += 2*PI;
+  reading = heading * 180/M_PI;
+  Serial.print("Theta: ");
+  Serial.println(reading, 2); // print the heading/bearing
+  delay(50);
+  return(reading);    // return the heading or bearing
 }
 
