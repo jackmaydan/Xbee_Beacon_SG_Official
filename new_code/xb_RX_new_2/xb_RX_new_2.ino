@@ -16,6 +16,9 @@ Modified by Robert Belter 10/30/2015
 
 
 #include <XBee.h>
+#include <SoftwareSerial.h>
+
+SoftwareSerial outputSerial(10, 9); // RX, TX
 
 XBee xbee = XBee();
 Rx16Response rx16 = Rx16Response();
@@ -41,6 +44,7 @@ void setup() {
   Serial.begin(57600); 
   Serial1.begin(57600);
   xbee.setSerial(Serial1);
+  outputSerial.begin(57600);
 }
 
 void loop() {
@@ -56,6 +60,7 @@ void loop() {
   //Process the data, print the result, and reset.
   int currentHeading = (ProcessData());
   Serial.println(currentHeading);
+  outputSerial.println(currentHeading);
 }
 
 
@@ -115,7 +120,7 @@ int ProcessData(){
   float headingx = 0;
   float headingy = 0;
   for(int i=1; i< samples; i++){
-    float adjustedRSSI = 100*pow(10,readings[i].signalStrength - maxRSSI);
+    float adjustedRSSI = 100*pow(10,(readings[i].signalStrength - maxRSSI)/10);
     headingx += adjustedRSSI*cos(readings[i].heading*PI/180);
     headingy += adjustedRSSI*sin(readings[i].heading*PI/180);
   }
