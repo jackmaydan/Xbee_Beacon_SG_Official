@@ -34,7 +34,7 @@ void loop() {
 
       //Print to console
       Serial.print("Recieved: ");
-      Serial.print(heading_converter.f);
+      Serial.print(heading_converter.f, 2);
       Serial.print(" with strength ");
       Serial.print(currentRSSI);
       Serial.println("dB");

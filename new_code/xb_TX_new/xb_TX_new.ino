@@ -36,9 +36,9 @@ int xmin, ymin, zmin = 1000;
 #endif
 
 //Axis offsets
-int xoff = -127;
-int yoff = 225;
-int zoff = -168;
+int xoff = -27;
+int yoff = 300;
+int zoff = 200;
 
 void setup(){
   Wire.begin();
@@ -52,7 +52,9 @@ void setup(){
 }
 
 void loop(){
-  heading_converter.f = getVector();
+  getVector();
+  Serial.print("Theta: ");
+  Serial.println(heading_converter.f, 2); // print the heading/bearing
   //Copy heading into payload
   memcpy(payload, heading_converter.b, 4);
   //Address of receiving device can be anything while in broadcasting mode
@@ -67,7 +69,7 @@ void loop(){
 /*--------------------------------------------------------------
 This the the fucntion which gathers the heading from the compass.
 ----------------------------------------------------------------*/
-int getVector () {
+void getVector () {
   float reading = -1;
   int x, y, z; 
   
@@ -113,10 +115,8 @@ int getVector () {
   float heading = atan2(y,x);
   if(heading < 0)
     heading += 2*PI;
-  reading = heading * 180/M_PI;
-  Serial.print("Theta: ");
-  Serial.println(reading, 2); // print the heading/bearing
+  reading = heading * 180/PI;
   delay(50);
-  return(reading);    // return the heading or bearing
+  heading_converter.f = reading;    // return the heading or bearing
 }
 
