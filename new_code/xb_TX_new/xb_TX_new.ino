@@ -113,8 +113,11 @@ void getVector () {
   Serial.println(output);
 #endif
   float heading = atan2(y,x);
+  heading += PI/2;
   if(heading < 0)
     heading += 2*PI;
+  if(heading > 2*PI)
+    heading -= 2*PI;
   reading = heading * 180/PI;
   delay(50);
   heading_converter.f = reading;    // return the heading or bearing

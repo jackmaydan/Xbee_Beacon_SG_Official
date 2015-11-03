@@ -120,7 +120,7 @@ int ProcessData(){
   float headingx = 0;
   float headingy = 0;
   for(int i=1; i< samples; i++){
-    float adjustedRSSI = 100*pow(10,(readings[i].signalStrength - maxRSSI)/10);
+    float adjustedRSSI = 100*pow(3,(readings[i].signalStrength - maxRSSI)/10);
     headingx += adjustedRSSI*cos(readings[i].heading*PI/180);
     headingy += adjustedRSSI*sin(readings[i].heading*PI/180);
   }
