@@ -9,6 +9,8 @@ then that data point is not evaluated. This prevents values that were not measur
 effecting the output of the digital filter.
 Authored By: Adam St. Amand
 Modified by Robert Belter 10/30/2015
+- Improved calculation of heading. Now uses floating point value from beacon and does circular mean averaging
+- Added support for i2c communication
 //////////////////////////////////*/
 
 
@@ -17,6 +19,7 @@ Modified by Robert Belter 10/30/2015
 
 #include <XBee.h>
 #include <SoftwareSerial.h>
+#include <Wire.h>
 
 SoftwareSerial outputSerial(10, 9); // RX, TX
 
@@ -26,6 +29,10 @@ int resetRSSI = -1000;    //The value that RSSI is reset to after each pass thro
 #define samples 110
 int temp, smoothData, rawData;
 int timeToScan = 4000;
+short currentHeading;
+
+//Variable for i2c comms
+uint8_t currHeadingI2c[2];
 
 //Structure to contain the readings from the beacon
 struct{
@@ -45,6 +52,10 @@ void setup() {
   Serial1.begin(57600);
   xbee.setSerial(Serial1);
   outputSerial.begin(57600);
+
+  //Initialize i2c communications
+  Wire.begin(8);                // join i2c bus with address #8
+  Wire.onRequest(i2cPrint); // register event
 }
 
 void loop() {
@@ -58,7 +69,9 @@ void loop() {
   }
   
   //Process the data, print the result, and reset.
-  int currentHeading = (ProcessData());
+  currentHeading = (ProcessData());
+  currHeadingI2c[0] = 0xFF&(currentHeading>>8);
+  currHeadingI2c[1] = 0xFF&currentHeading;
   Serial.println(currentHeading);
   outputSerial.println(currentHeading);
 }
@@ -97,9 +110,7 @@ void Retrieve(int i){
           
 
 
-//Finds the heading with maximum RSSI value and averages it
-//with any headings that are within 1 RSSI unit. (>=maxRSSI-1)
-
+//Creates a heading through averaging the readings
 int ProcessData(){
   int maxRSSI;
   unsigned long maxIndex = 0;
@@ -117,9 +128,11 @@ int ProcessData(){
     return -1;
   }
   //Create an average of all the samples
+  //Circular mean, so use vector addition
   float headingx = 0;
   float headingy = 0;
   for(int i=1; i< samples; i++){
+    //Set magnitude of vector by signal strength
     float adjustedRSSI = 100*pow(3,(readings[i].signalStrength - maxRSSI)/10);
     headingx += adjustedRSSI*cos(readings[i].heading*PI/180);
     headingy += adjustedRSSI*sin(readings[i].heading*PI/180);
@@ -128,6 +141,13 @@ int ProcessData(){
   float heading = atan2(headingy, headingx);
   if(heading < 0)
     heading += 2*PI;
-  heading = heading * 180/M_PI;
+  heading = heading * 180/PI;
   return (int) (heading);    //Return the average of all headings
+}
+
+//When info is requested over i2c
+void i2cPrint()
+{
+  Wire.write(currHeadingI2c, 2);
+  // as expected by master
 }
