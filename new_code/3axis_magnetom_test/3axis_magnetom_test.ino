@@ -1,3 +1,8 @@
+//This code is for testing the triple axis magnetometer HMC5883L. It will print out readings from your magnetometer. A
+//properly functioning compass should read approximately 0-359 when pointed in the proper direction. 
+//0 degrees is north, 90 east, etc. 
+//Beware of magnetic field interference (nearby wires, bolts, etc.)
+//Test outside away from any electronics
 #include <HMC5883L.h>
 
     #include <Wire.h> //I2C Arduino Library
