@@ -16,7 +16,28 @@
 //#include <HMC5883L.h>
 #define address 0x1E 
 
+//--------------------CALIBRATION FOR MAGNETOMETER---------------------
+//In order to ensure that your transmitter will read the correct heading,
+//we have provided a calibration mode that will print the maximum and minimum
+//values read from each axis to the serial output. Rotate the beacon along
+//each axis several times, then calculuate the axis offsets as
+// -(MAX+MIN)/2
+
+//Uncomment the below line to activate calibration mode
 //#define calibration_mode
+
+//Axis offsets for magnetometer
+int xoff = -27;
+int yoff = 300;
+int zoff = 200;
+
+//Callibration values, can be ignored
+#ifdef calibration_mode
+int xmax, ymax, zmax = -1000;
+int xmin, ymin, zmin = 1000;
+#endif
+
+//-----------------------END CALIBRATION FOR MAGNETOMETER------------------
 
 XBee xbee = XBee();
 int compassAddress = 0x42 >> 1;
@@ -28,17 +49,6 @@ union{
   float f;
   uint8_t b[4];
 }heading_converter;
-
-//Callibration values, can be ignored
-#ifdef calibration_mode
-int xmax, ymax, zmax = -1000;
-int xmin, ymin, zmin = 1000;
-#endif
-
-//Axis offsets
-int xoff = -27;
-int yoff = 300;
-int zoff = 200;
 
 void setup(){
   Wire.begin();
