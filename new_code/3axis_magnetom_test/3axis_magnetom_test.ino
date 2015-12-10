@@ -3,6 +3,7 @@
 //0 degrees is north, 90 east, etc. 
 //Beware of magnetic field interference (nearby wires, bolts, etc.)
 //Test outside away from any electronics
+//Jack Maydan 10/8/15
 #include <HMC5883L.h>
 
     #include <Wire.h> //I2C Arduino Library
