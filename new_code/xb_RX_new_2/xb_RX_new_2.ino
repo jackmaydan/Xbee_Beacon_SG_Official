@@ -127,21 +127,30 @@ int ProcessData(){
   if(maxRSSI == resetRSSI){
     return -1;
   }
+
+  //Use the maximum heading to define heading
+  heading = reading[maxIndex];
+
+  //------Averaging Code, currently Defunct-------
+  /*
+    
   //Create an average of all the samples
   //Circular mean, so use vector addition
   float headingx = 0;
   float headingy = 0;
   for(int i=1; i< samples; i++){
     //Set magnitude of vector by signal strength
-    float adjustedRSSI = 100*pow(3,(readings[i].signalStrength - maxRSSI)/10);
-    headingx += adjustedRSSI*cos(readings[i].heading*PI/180);
-    headingy += adjustedRSSI*sin(readings[i].heading*PI/180);
+    headingx += readings[i].signalStrength*cos(readings[i].heading*PI/180);
+    headingy += readings[i].signalStrength*sin(readings[i].heading*PI/180);
   }
   
   float heading = atan2(headingy, headingx);
   if(heading < 0)
     heading += 2*PI;
   heading = heading * 180/PI;
+  */
+  //------End Averaging Code------
+  
   return (int) (heading);    //Return the average of all headings
 }
 
