@@ -18,31 +18,42 @@
 
 //--------------------CALIBRATION FOR MAGNETOMETER---------------------
 //In order to ensure that your transmitter will read the correct heading,
-//we have provided a calibration mode that will print the maximum and minimum
-//values read from each axis to the serial output. Rotate the beacon along
-//each axis several times, then calculuate the axis offsets as
-// -(MAX+MIN)/2
+//we have provided a calibration mode that will print the values over the
+//Xbees. Make sure to use with XB_RX_Calibration
 
 //Uncomment the below line to activate calibration mode
 //#define calibration_mode
 
-//Axis offsets for magnetometer
-int xoff = -27;
-int yoff = 300;
-int zoff = 200;
+//Uncomment the below line to activate output over XBee (must also uncomment above)
+//#define output_calibration
 
-//Callibration values, can be ignored
-#ifdef calibration_mode
-int xmax, ymax, zmax = -1000;
-int xmin, ymin, zmin = 1000;
+//Axis offsets for magnetometer
+int xoff = 0;
+int yoff = 0;
+int zoff = 0;
+
+//Axis scales for magnetometer
+float xscale = 1.070;
+float yscale = 1.117;
+float zscale = 1;
+
+#ifdef output_calibration
+union{
+  int i[3];
+  uint8_t b[6];
+}calibration_converter;
 #endif
+
+//Current readings from magnetometer axis
+int xout, yout, zout; 
 
 //-----------------------END CALIBRATION FOR MAGNETOMETER------------------
 
 XBee xbee = XBee();
 int compassAddress = 0x42 >> 1;
 
-uint8_t payload[4] = {0,0,0,0};
+uint8_t payload[12];
+int payload_size = 4;
 
 
 union{
@@ -65,14 +76,30 @@ void loop(){
   getVector();
   Serial.print("Theta: ");
   Serial.println(heading_converter.f, 2); // print the heading/bearing
-  //Copy heading into payload
-  memcpy(payload, heading_converter.b, 4);
+
+  //Create payload
+  makePayload();
+  
   //Address of receiving device can be anything while in broadcasting mode
-  Tx16Request tx = Tx16Request(0x5678, payload, sizeof(payload));
+  Tx16Request tx = Tx16Request(0x5678, payload, payload_size);
   xbee.send(tx);
   
   //Delay must be longer than the readPacket timeout on the receiving module
   delay(10);
+}
+
+void makePayload(){
+#ifndef output_calibration
+  //Copy heading into payload
+  memcpy(payload, heading_converter.b, 4);
+#else
+  //Use the calibration values as the output
+  calibration_converter.i[0] = xout;
+  calibration_converter.i[1] = yout;
+  calibration_converter.i[2] = zout;
+  memcpy(payload, calibration_converter.b, 12);
+  payload_size = 12;
+#endif
 }
 
 
@@ -81,8 +108,8 @@ This the the fucntion which gathers the heading from the compass.
 ----------------------------------------------------------------*/
 void getVector () {
   float reading = -1;
-  int x, y, z; 
-  
+  int x,y,z;
+
   // step 1: instruct sensor to read echoes 
   Wire.beginTransmission(address);  // transmit to device
   // the address specified in the datasheet is 66 (0x42) 
@@ -90,14 +117,11 @@ void getVector () {
   Wire.write(0x03);          // command sensor to measure angle  
   Wire.endTransmission();  // stop transmitting 
 
-  // step 2: wait for readings to happen 
-  delay(7);               // datasheet suggests at least 6000 microseconds 
-
   // step 3: request reading from sensor 
-  Wire.requestFrom(address, 6);  // request 2 bytes from slave device #33 
+  Wire.requestFrom(address, 6);
 
   // step 4: receive reading from sensor 
-  if(2 <= Wire.available())     // if two bytes were received 
+  if(6 <= Wire.available())     // if two bytes were received 
   { 
     x = Wire.read()<<8; //X msb
     x |= Wire.read(); //X lsb
@@ -111,17 +135,20 @@ void getVector () {
   x += xoff;
   y += yoff;
   z += zoff;
+  //Scale axes
+  x *= xscale;
+  y *= yscale;
+  z *= zscale;
+  
 #ifdef calibration_mode
-  if(x<xmin) xmin = x;
-  if(x>xmax) xmax = x;
-  if(y<ymin) ymin = y;
-  if(y>ymax) ymax = y;
-  if(z<zmin) zmin = z;
-  if(z>zmax) zmax = z;
+  xout = x;
+  yout = y;
+  zout = z;
   char output[100];
-  sprintf(output, "x: %d - %d, y: %d - %d, z: %d - %d", xmin, xmax, ymin, ymax, zmin, zmax);
+  sprintf(output, "x: %d, y: %d, z: %d", xout, yout, zout);
   Serial.println(output);
 #endif
+
   float heading = atan2(y,x);
   heading += PI/2;
   if(heading < 0)
@@ -129,7 +156,6 @@ void getVector () {
   if(heading > 2*PI)
     heading -= 2*PI;
   reading = heading * 180/PI;
-  delay(50);
   heading_converter.f = reading;    // return the heading or bearing
 }
 

@@ -129,7 +129,7 @@ int ProcessData(){
   }
 
   //Use the maximum heading to define heading
-  heading = reading[maxIndex];
+  float heading = readings[maxIndex].heading;
 
   //------Averaging Code, currently Defunct-------
   /*
