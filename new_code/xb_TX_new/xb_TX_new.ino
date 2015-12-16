@@ -21,15 +21,15 @@
 //we have provided a calibration mode that will print the values over the
 //Xbees. Make sure to use with XB_RX_Calibration
 
-//Uncomment the below line to activate calibration mode
+//Uncomment the below line to activate print out over serial for magnetometer x,y,z
 //#define calibration_mode
 
-//Uncomment the below line to activate output over XBee (must also uncomment above)
+//Uncomment the below line to activate output above ^ over XBee 
 //#define output_calibration
 
 //Axis offsets for magnetometer
-int xoff = 0;
-int yoff = 0;
+int xoff = -7;
+int yoff = 54;
 int zoff = 0;
 
 //Axis scales for magnetometer
